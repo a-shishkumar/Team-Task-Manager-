@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: ttm-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/team-task-manager
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CLIENT_URL=http://localhost:5173
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - ttm-network
+
+  frontend:
+    build: ./frontend
+    container_name: ttm-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ttm-network
+
+  mongo:
+    image: mongo:7
+    container_name: ttm-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+    networks:
+      - ttm-network
+
+volumes:
+  mongo-data:
+
+networks:
+  ttm-network:
+    driver: bridge

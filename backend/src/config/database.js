@@ -1,0 +1,40 @@
+const mongoose = require('mongoose');
+const logger = require('../utils/logger');
+const config = require('./index');
+
+/**
+ * Connect to MongoDB with retry logic
+ */
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(config.mongoose.url, config.mongoose.options);
+    logger.info(`MongoDB Connected: ${conn.connection.host}`);
+
+    mongoose.connection.on('error', (err) => {
+      logger.error(`MongoDB connection error: ${err}`);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('MongoDB disconnected. Attempting to reconnect...');
+    });
+
+    mongoose.connection.on('reconnected', () => {
+      logger.info('MongoDB reconnected');
+    });
+
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      logger.info('MongoDB connection closed through app termination');
+      process.exit(0);
+    });
+
+    return conn;
+  } catch (error) {
+    logger.error(`MongoDB connection failed: ${error.message}`);
+    // Retry after 5 seconds
+    setTimeout(connectDB, 5000);
+  }
+};
+
+module.exports = connectDB;
