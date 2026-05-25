@@ -20,6 +20,9 @@ export const userApi = {
   updateProfile: (data: Partial<User>) => api.put<ApiResponse<{ user: User }>>('/users/profile', data),
   changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => api.put('/users/change-password', data),
   updateRole: (id: string, role: string) => api.put(`/users/${id}/role`, { role }),
+  create: (data: Partial<User> & { password?: string }) => api.post<ApiResponse<{ user: User }>>('/users', data),
+  update: (id: string, data: Partial<User>) => api.put<ApiResponse<{ user: User }>>(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
 };
 
 // ━━━ Project API ━━━

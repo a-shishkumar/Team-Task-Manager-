@@ -51,7 +51,7 @@ export default function TaskDetailPage() {
   const totalSubs = task.subtasks?.length || 0;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto  space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
@@ -174,7 +174,7 @@ export default function TaskDetailPage() {
             <div className="space-y-2"><Label>Title</Label><Input {...editForm.register('title')} /></div>
             <div className="space-y-2"><Label>Description</Label><Textarea {...editForm.register('description')} rows={3} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Status</Label><Select defaultValue={task.status} onValueChange={v => editForm.setValue('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Status</Label><Select defaultValue={task.status} onValueChange={v => editForm.setValue('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-2"><Label>Priority</Label><Select defaultValue={task.priority} onValueChange={v => editForm.setValue('priority', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select></div>
             </div>
             <div className="space-y-2"><Label>Due Date</Label><Input {...editForm.register('dueDate')} type="date" /></div>

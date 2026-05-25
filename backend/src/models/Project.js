@@ -135,10 +135,12 @@ projectSchema.virtual('memberCount').get(function () {
 
 // Check if user is member or owner
 projectSchema.methods.isMember = function (userId) {
-  const isOwner = this.owner.toString() === userId.toString();
-  const isMember = this.members.some(
-    (m) => m.user.toString() === userId.toString()
-  );
+  const ownerId = this.owner?._id || this.owner;
+  const isOwner = ownerId && ownerId.toString() === userId.toString();
+  const isMember = this.members.some((m) => {
+    const mUserId = m.user?._id || m.user;
+    return mUserId && mUserId.toString() === userId.toString();
+  });
   return isOwner || isMember;
 };
 

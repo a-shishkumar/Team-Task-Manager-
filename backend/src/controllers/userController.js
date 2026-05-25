@@ -9,7 +9,15 @@ const ApiError = require('../utils/ApiError');
 exports.getUsers = catchAsync(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
-  const filter = { isActive: true };
+  
+  const filter = {};
+  if (req.query.isActive !== undefined) {
+    filter.isActive = req.query.isActive === 'true';
+  } else if (req.user.role !== 'admin') {
+    // Non-admins only see active users by default
+    filter.isActive = true;
+  }
+
   if (req.query.search) {
     filter.$or = [{ name: new RegExp(req.query.search, 'i') }, { email: new RegExp(req.query.search, 'i') }];
   }
@@ -54,6 +62,63 @@ exports.deactivateUser = catchAsync(async (req, res) => {
   const user = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
   if (!user) throw ApiError.notFound('User not found');
   ApiResponse.success(res, { user }, 'User deactivated');
+});
+
+exports.createUser = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') throw ApiError.forbidden('Only admins can create users');
+  const { name, email, password, role, department, title, phone } = req.body;
+  
+  // Check duplicate email
+  const existingUser = await User.findOne({ email });
+  if (existingUser) throw ApiError.conflict('Email is already registered');
+
+  const user = await User.create({
+    name,
+    email,
+    password: password || 'TempPass123!',
+    role: role || 'member',
+    department: department || '',
+    title: title || '',
+    phone: phone || '',
+    isActive: true,
+  });
+
+  ApiResponse.created(res, { user }, 'User created successfully');
+});
+
+exports.updateUser = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') throw ApiError.forbidden('Only admins can update users');
+  const { name, email, role, department, title, phone, isActive } = req.body;
+
+  const user = await User.findById(req.params.id);
+  if (!user) throw ApiError.notFound('User not found');
+
+  if (email && email !== user.email) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) throw ApiError.conflict('Email is already registered');
+  }
+
+  const updated = await User.findByIdAndUpdate(
+    req.params.id,
+    { name, email, role, department, title, phone, isActive },
+    { new: true, runValidators: true }
+  );
+
+  ApiResponse.success(res, { user: updated }, 'User updated successfully');
+});
+
+exports.deleteUser = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') throw ApiError.forbidden('Only admins can delete users');
+  const user = await User.findById(req.params.id);
+  if (!user) throw ApiError.notFound('User not found');
+
+  // Hard delete
+  await User.findByIdAndDelete(req.params.id);
+  
+  // Also clean up tasks assigned to this user
+  await Task.updateMany({ assignee: req.params.id }, { $unset: { assignee: '' } });
+
+  ApiResponse.success(res, null, 'User deleted successfully');
 });
 
 exports.getDashboardStats = catchAsync(async (req, res) => {
