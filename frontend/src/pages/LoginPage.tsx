@@ -139,8 +139,8 @@ export default function LoginPage() {
           <Card>
             <CardContent className="pt-0 pb-0 space-y-1">
               <p className="text-xs font-medium text-muted-foreground">Demo Credentials</p>
-              <p className="text-xs"><strong>Admin:</strong> admin@ttm.com / Admin@123</p>
-              <p className="text-xs"><strong>Member:</strong> sarah@ttm.com / Member@123</p>
+              <p className="text-xs"><strong>Admin:</strong> admin@ttm.com / Test@123</p>
+              <p className="text-xs"><strong>Member:</strong> sarah@ttm.com / Test@123</p>
             </CardContent>
           </Card>
         </div>
