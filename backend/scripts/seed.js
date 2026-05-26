@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const MONGO_URI = 'mongodb://localhost:27017/team-task-manager';
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://ashishkr0727:ashish11@cluster0.w66ll.mongodb.net/team-task-manager?retryWrites=true&w=majority&appName=Cluster0';
 
 // ━━━ Inline Schemas (to avoid config/env dependencies) ━━━
 const userSchema = new mongoose.Schema({
@@ -87,16 +87,15 @@ async function seed() {
 
   // ━━━ 1. USERS ━━━
   console.log('👤 Creating users...');
-  const hashedPassword = await bcrypt.hash('Admin@123', 12);
-  const memberPassword = await bcrypt.hash('Member@123', 12);
+  const commonPassword = await bcrypt.hash('Test@123', 12);
 
   const users = await User.insertMany([
-    { name: 'Ashish Kumar', email: 'admin@ttm.com', password: hashedPassword, role: 'admin', department: 'Engineering', title: 'CTO', phone: '+91-9876543210', isEmailVerified: true },
-    { name: 'Sarah Johnson', email: 'sarah@ttm.com', password: memberPassword, role: 'member', department: 'Design', title: 'UI/UX Lead', phone: '+91-9876543211', isEmailVerified: true },
-    { name: 'Rahul Sharma', email: 'rahul@ttm.com', password: memberPassword, role: 'member', department: 'Engineering', title: 'Full Stack Developer', phone: '+91-9876543212', isEmailVerified: true },
-    { name: 'Priya Patel', email: 'priya@ttm.com', password: memberPassword, role: 'member', department: 'Product', title: 'Product Manager', phone: '+91-9876543213', isEmailVerified: true },
-    { name: 'Amit Verma', email: 'amit@ttm.com', password: memberPassword, role: 'member', department: 'Engineering', title: 'Backend Developer', phone: '+91-9876543214', isEmailVerified: true },
-    { name: 'Neha Gupta', email: 'neha@ttm.com', password: memberPassword, role: 'member', department: 'QA', title: 'QA Engineer', phone: '+91-9876543215', isEmailVerified: true },
+    { name: 'Ashish Kumar', email: 'admin@ttm.com', password: commonPassword, role: 'admin', department: 'Engineering', title: 'CTO', phone: '+91-9876543210', isEmailVerified: true },
+    { name: 'Sarah Johnson', email: 'sarah@ttm.com', password: commonPassword, role: 'member', department: 'Design', title: 'UI/UX Lead', phone: '+91-9876543211', isEmailVerified: true },
+    { name: 'Rahul Sharma', email: 'rahul@ttm.com', password: commonPassword, role: 'member', department: 'Engineering', title: 'Full Stack Developer', phone: '+91-9876543212', isEmailVerified: true },
+    { name: 'Priya Patel', email: 'priya@ttm.com', password: commonPassword, role: 'member', department: 'Product', title: 'Product Manager', phone: '+91-9876543213', isEmailVerified: true },
+    { name: 'Amit Verma', email: 'amit@ttm.com', password: commonPassword, role: 'member', department: 'Engineering', title: 'Backend Developer', phone: '+91-9876543214', isEmailVerified: true },
+    { name: 'Neha Gupta', email: 'neha@ttm.com', password: commonPassword, role: 'member', department: 'QA', title: 'QA Engineer', phone: '+91-9876543215', isEmailVerified: true },
   ]);
   console.log(`   ✅ Created ${users.length} users`);
 
@@ -232,12 +231,12 @@ async function seed() {
   console.log(`   🔔 Notifications: ${notifications.length}`);
   console.log(`   📊 Activity Logs: ${activityLogs.length}`);
   console.log('\n━━━ LOGIN CREDENTIALS ━━━');
-  console.log('   Admin:  admin@ttm.com  / Admin@123');
-  console.log('   Member: sarah@ttm.com  / Member@123');
-  console.log('   Member: rahul@ttm.com  / Member@123');
-  console.log('   Member: priya@ttm.com  / Member@123');
-  console.log('   Member: amit@ttm.com   / Member@123');
-  console.log('   Member: neha@ttm.com   / Member@123');
+  console.log('   Admin:  admin@ttm.com  / Test@123');
+  console.log('   Member: sarah@ttm.com  / Test@123');
+  console.log('   Member: rahul@ttm.com  / Test@123');
+  console.log('   Member: priya@ttm.com  / Test@123');
+  console.log('   Member: amit@ttm.com   / Test@123');
+  console.log('   Member: neha@ttm.com   / Test@123');
 
   await mongoose.disconnect();
   console.log('\n🔌 Disconnected from MongoDB. Done!');
