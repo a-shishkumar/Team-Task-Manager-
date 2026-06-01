@@ -93,7 +93,7 @@ export default function TasksPage() {
     },
   });
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<TF>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(taskSchema),
   });
 
@@ -223,7 +223,7 @@ export default function TasksPage() {
             <DialogTitle>Create Task</DialogTitle>
             <DialogDescription>Add a new task to a project</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit((d) => createMut.mutate(d))} className="space-y-4">
+          <form onSubmit={handleSubmit((d) => createMut.mutate(d as unknown as TF))} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="task-title">Title</Label>
               <Input {...register('title')} id="task-title" placeholder="Task title..." />
@@ -243,7 +243,7 @@ export default function TasksPage() {
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects?.map((p) => (
+                    {projects?.map((p: any) => (
                       <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>

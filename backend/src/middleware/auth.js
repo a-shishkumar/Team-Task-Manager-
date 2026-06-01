@@ -1,6 +1,7 @@
 const ApiError = require('../utils/ApiError');
 const { verifyToken } = require('../utils/tokenUtils');
 const User = require('../models/User');
+const RolePermission = require('../models/RolePermission');
 const config = require('../config');
 
 /**
@@ -67,6 +68,41 @@ const authorize = (...roles) => {
 };
 
 /**
+ * Restrict access based on dynamic database permissions
+ */
+const checkPermission = (action) => {
+  return async (req, res, next) => {
+    try {
+      // Admins bypass all permission checks and can do everything
+      if (req.user.role === 'admin') {
+        return next();
+      }
+
+      // Find permissions for user's role
+      let rolePerm = await RolePermission.findOne({ role: req.user.role });
+      if (!rolePerm) {
+        // Fallback default permissions
+        if (req.user.role === 'member') {
+          rolePerm = { create: true, view: true, edit: true, delete: false };
+        } else {
+          rolePerm = { create: false, view: true, edit: false, delete: false };
+        }
+      }
+
+      if (rolePerm[action]) {
+        return next();
+      }
+
+      return next(
+        ApiError.forbidden(`You do not have permission to ${action} resources`)
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+/**
  * Optional auth - attach user if token exists, but don't block
  */
 const optionalAuth = async (req, res, next) => {
@@ -91,4 +127,4 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, authorize, optionalAuth };
+module.exports = { protect, authorize, checkPermission, optionalAuth };

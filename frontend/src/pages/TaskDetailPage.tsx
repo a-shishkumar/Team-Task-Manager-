@@ -32,7 +32,7 @@ export default function TaskDetailPage() {
   const [showSubtaskForm, setShowSubtaskForm] = useState(false);
   const [commentText, setCommentText] = useState('');
 
-  const { data: task, isLoading } = useQuery({ queryKey: ['task', id], queryFn: async () => { const r = await taskApi.getById(id!); return (r.data.data as any)?.task || r.data.data as Task; }, enabled: !!id });
+  const { data: task, isLoading } = useQuery({ queryKey: ['task', id], queryFn: async () => { const r = await taskApi.getById(id!); return (r.data.data as any)?.task; }, enabled: !!id });
   const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: async () => { const r = await commentApi.getByTask(id!); return r.data.data as Comment[]; }, enabled: !!id && tab === 'discussion' });
 
   const editForm = useForm<{ title: string; description: string; status: string; priority: string; dueDate: string }>();
@@ -47,7 +47,7 @@ export default function TaskDetailPage() {
   if (isLoading) return <div className="mx-auto max-w-3xl space-y-4"><div className="h-8 w-48 skeleton rounded-lg" /><div className="h-64 skeleton rounded-xl" /></div>;
   if (!task) return <div className="py-20 text-center text-muted-foreground">Task not found</div>;
 
-  const completedSubs = task.subtasks?.filter(s => s.isCompleted).length || 0;
+  const completedSubs = task.subtasks?.filter((s: any) => s.isCompleted).length || 0;
   const totalSubs = task.subtasks?.length || 0;
 
   return (
@@ -126,7 +126,7 @@ export default function TaskDetailPage() {
 
               {/* Subtask list */}
               <div className="space-y-1">
-                {task.subtasks?.map(sub => (
+                {task.subtasks?.map((sub: any) => (
                   <div key={sub._id} className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/50 transition-colors">
                     <button onClick={() => toggleSubtask.mutate(sub._id)} className="shrink-0">
                       {sub.isCompleted ? <CheckCircle2 className="size-5 text-primary" /> : <Circle className="size-5 text-muted-foreground" />}

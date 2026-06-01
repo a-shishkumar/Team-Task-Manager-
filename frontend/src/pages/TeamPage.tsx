@@ -5,7 +5,7 @@ import {
   Search, Shield, UserCircle, Plus, Edit2, Trash2, Eye,
   Grid, List, ChevronLeft, ChevronRight, Mail, Phone, Briefcase, Calendar, ShieldCheck
 } from 'lucide-react';
-import { userApi } from '@/api/endpoints';
+import { userApi, permissionApi } from '@/api/endpoints';
 import { cn, getInitials } from '@/lib/utils';
 import type { User } from '@/types';
 import type { RootState } from '@/store';
@@ -23,6 +23,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+
+// Custom icons
+
 
 export default function TeamPage() {
   const queryClient = useQueryClient();
@@ -49,12 +52,22 @@ export default function TeamPage() {
     name: '',
     email: '',
     password: '',
-    role: 'member' as 'admin' | 'member',
+    role: 'member' as string,
     department: '',
     title: '',
     phone: '',
     isActive: true,
   });
+
+  // Query dynamic roles list from permissions
+  const { data: permissionsResponse } = useQuery({
+    queryKey: ['permissions-list'],
+    queryFn: async () => {
+      const r = await permissionApi.getAll();
+      return r.data.data;
+    },
+  });
+  const availableRoles = permissionsResponse?.map((p: any) => p.role) || ['admin', 'member'];
 
   // Query users
   const { data: responseData, isLoading } = useQuery({
@@ -234,11 +247,14 @@ export default function TeamPage() {
               setRoleFilter(e.target.value);
               setPage(1);
             }}
-            className="h-9 px-3 py-1 bg-background border border-input rounded-md text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-primary/20 outline-hidden"
+            className="h-9 px-3 py-1 bg-background border border-input rounded-md text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-primary/20 outline-hidden capitalize"
           >
             <option value="">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="member">Member</option>
+            {availableRoles.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
           </select>
 
           {/* Status Filter (Admins only since they can see deactivated) */}
@@ -615,11 +631,14 @@ export default function TeamPage() {
                 <select
                   id="add-role"
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'member' })}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-primary/20 outline-hidden"
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-primary/20 outline-hidden capitalize"
                 >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
+                  {availableRoles.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-1">
@@ -710,11 +729,14 @@ export default function TeamPage() {
                 <select
                   id="edit-role"
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'member' })}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-primary/20 outline-hidden"
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-primary/20 outline-hidden capitalize"
                 >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
+                  {availableRoles.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-1">

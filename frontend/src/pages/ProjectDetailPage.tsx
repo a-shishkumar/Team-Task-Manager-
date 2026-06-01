@@ -31,7 +31,7 @@ export default function ProjectDetailPage() {
   const [memberOpen, setMemberOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const { data: project, isLoading } = useQuery({ queryKey: ['project', id], queryFn: async () => { const r = await projectApi.getById(id!); return (r.data.data as any)?.project || r.data.data as Project; }, enabled: !!id });
+  const { data: project, isLoading } = useQuery({ queryKey: ['project', id], queryFn: async () => { const r = await projectApi.getById(id!); return (r.data.data as any)?.project; }, enabled: !!id });
   const { data: tasks } = useQuery({ queryKey: ['project-tasks', id], queryFn: async () => { const r = await taskApi.getAll({ project: id!, limit: '100' }); return r.data.data as Task[]; }, enabled: !!id });
   const { data: allUsers } = useQuery({ queryKey: ['all-users'], queryFn: async () => { const r = await userApi.getAll({ limit: '100' }); return r.data.data as User[]; } });
 
@@ -104,7 +104,7 @@ export default function ProjectDetailPage() {
                 <div className="flex-1 min-w-0"><p className="truncate text-sm font-medium">{typeof project.owner === 'object' ? project.owner.name : 'Owner'}</p></div>
                 <Badge variant="default">owner</Badge>
               </div>
-              {project.members?.map((m) => (
+              {project.members?.map((m: any) => (
                 <div key={m.user?._id || m.user} className="flex items-center gap-3">
                   <Avatar className="size-8"><AvatarFallback className="text-xs">{typeof m.user === 'object' ? getInitials(m.user.name) : '?'}</AvatarFallback></Avatar>
                   <div className="flex-1 min-w-0"><p className="truncate text-sm font-medium">{typeof m.user === 'object' ? m.user.name : 'Member'}</p></div>
@@ -152,7 +152,7 @@ export default function ProjectDetailPage() {
       {/* Add Member Dialog */}
       <Dialog open={memberOpen} onOpenChange={setMemberOpen}>
         <DialogContent><DialogHeader><DialogTitle>Add Member</DialogTitle><DialogDescription>Add a team member to this project</DialogDescription></DialogHeader>
-          <MemberForm users={allUsers || []} existingIds={[...(project.members?.map(m => typeof m.user === 'object' ? m.user._id : m.user) || []), typeof project.owner === 'object' ? project.owner._id : project.owner]} onSubmit={d => addMemberMut.mutate(d)} isPending={addMemberMut.isPending} />
+          <MemberForm users={allUsers || []} existingIds={[...(project.members?.map((m: any) => typeof m.user === 'object' ? m.user._id : m.user) || []), typeof project.owner === 'object' ? project.owner._id : project.owner]} onSubmit={d => addMemberMut.mutate(d)} isPending={addMemberMut.isPending} />
         </DialogContent>
       </Dialog>
 

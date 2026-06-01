@@ -1,9 +1,12 @@
 const Task = require('../models/Task');
 const Project = require('../models/Project');
+const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const Notification = require('../models/Notification');
 const ApiError = require('../utils/ApiError');
 const QueryBuilder = require('../utils/QueryBuilder');
+const emailService = require('../utils/email');
+const logger = require('../utils/logger');
 
 class TaskService {
   async create(taskData, userId) {
@@ -17,6 +20,22 @@ class TaskService {
 
     if (taskData.assignee && taskData.assignee !== userId.toString()) {
       await Notification.create({ recipient: taskData.assignee, sender: userId, type: 'task_assigned', title: 'New Task Assigned', message: `You have been assigned "${task.title}" in "${project.name}"`, link: `/projects/${project._id}/tasks/${task._id}`, relatedProject: project._id, relatedTask: task._id });
+      
+      // Asynchronously send email notification
+      User.findById(taskData.assignee).then(async (assigneeUser) => {
+        const reporterUser = await User.findById(userId);
+        if (assigneeUser && assigneeUser.email) {
+          await emailService.sendTaskAssignmentEmail(
+            assigneeUser.email,
+            assigneeUser.name,
+            task.title,
+            project.name,
+            reporterUser ? reporterUser.name : 'A teammate'
+          );
+        }
+      }).catch((err) => {
+        logger.error(`Failed to send assignment email: ${err.message}`);
+      });
     }
 
     await ActivityLog.create({ user: userId, action: 'created', entityType: 'task', entityId: task._id, project: project._id, details: { taskTitle: task.title } });
@@ -62,6 +81,7 @@ class TaskService {
     if (!task) throw ApiError.notFound('Task not found');
     const project = await Project.findById(task.project);
     if (!project.isMember(userId)) throw ApiError.forbidden('Access denied');
+    const oldAssignee = task.assignee?.toString();
     const oldStatus = task.status;
     Object.assign(task, updateData);
     await task.save();
@@ -72,8 +92,24 @@ class TaskService {
         await Notification.create({ recipient: rid, sender: userId, type: 'task_updated', title: 'Task Updated', message: `"${task.title}" moved to ${updateData.status}`, relatedProject: project._id, relatedTask: task._id });
       }
     }
-    if (updateData.assignee && updateData.assignee !== task.assignee?.toString()) {
+    if (updateData.assignee && updateData.assignee !== oldAssignee) {
       await Notification.create({ recipient: updateData.assignee, sender: userId, type: 'task_assigned', title: 'Task Assigned', message: `You have been assigned "${task.title}"`, relatedProject: project._id, relatedTask: task._id });
+      
+      // Asynchronously send email notification
+      User.findById(updateData.assignee).then(async (assigneeUser) => {
+        const updaterUser = await User.findById(userId);
+        if (assigneeUser && assigneeUser.email) {
+          await emailService.sendTaskAssignmentEmail(
+            assigneeUser.email,
+            assigneeUser.name,
+            task.title,
+            project.name,
+            updaterUser ? updaterUser.name : 'A teammate'
+          );
+        }
+      }).catch((err) => {
+        logger.error(`Failed to send assignment email: ${err.message}`);
+      });
     }
 
     await ActivityLog.create({ user: userId, action: updateData.status !== oldStatus ? 'status_changed' : 'updated', entityType: 'task', entityId: task._id, project: project._id, details: { taskTitle: task.title, changes: Object.keys(updateData) } });

@@ -24,6 +24,7 @@ const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const permissionRoutes = require('./routes/permissionRoutes');
 
 // Initialize Express
 const app = express();
@@ -73,6 +74,7 @@ app.use(`${apiPrefix}/projects`, projectRoutes);
 app.use(`${apiPrefix}/tasks`, taskRoutes);
 app.use(`${apiPrefix}/comments`, commentRoutes);
 app.use(`${apiPrefix}/notifications`, notificationRoutes);
+app.use(`${apiPrefix}/permissions`, permissionRoutes);
 
 // ━━━ Swagger Docs ━━━
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customCss: '.swagger-ui .topbar { display: none }', customSiteTitle: 'TTM API Docs' }));

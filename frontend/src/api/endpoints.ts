@@ -68,3 +68,9 @@ export const notificationApi = {
   markAllAsRead: () => api.put('/notifications/read-all'),
   delete: (id: string) => api.delete(`/notifications/${id}`),
 };
+
+// ━━━ Permission API ━━━
+export const permissionApi = {
+  getAll: () => api.get<ApiResponse<{ _id: string; role: string; create: boolean; view: boolean; edit: boolean; delete: boolean }[]>>('/permissions'),
+  update: (data: { role: string; create: boolean; view: boolean; edit: boolean; delete: boolean }[]) => api.put<ApiResponse<any>>('/permissions', data),
+};

@@ -20,7 +20,7 @@ const signup = Joi.object({
       'string.pattern.base': 'Password must contain uppercase, lowercase, number, and special character',
       'any.required': 'Password is required',
     }),
-  role: Joi.string().valid('admin', 'member').default('member'),
+  role: Joi.string().default('member'),
 });
 
 const login = Joi.object({

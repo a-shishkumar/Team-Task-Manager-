@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { LayoutDashboard, FolderKanban, ListTodo, Users, Bell, Settings, LogOut, Menu, X, Moon, Sun, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ListTodo, Users, Bell, Settings, LogOut, Menu, X, Moon, Sun, ChevronDown, Shield } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { logout } from '@/store/authSlice';
 import { getInitials } from '@/lib/utils';
@@ -39,6 +39,11 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
+  const visibleNavItems = [
+    ...navItems,
+    ...(user?.role === 'admin' ? [{ path: '/permissions', label: 'Permissions', icon: Shield }] : []),
+  ];
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Mobile Overlay */}
@@ -74,7 +79,7 @@ export default function DashboardLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {navItems.map(({ path, label, icon: Icon }) => (
+          {visibleNavItems.map(({ path, label, icon: Icon }) => (
             <NavLink
               key={path}
               to={path}

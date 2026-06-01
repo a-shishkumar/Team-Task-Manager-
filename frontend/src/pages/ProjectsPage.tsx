@@ -61,7 +61,7 @@ export default function ProjectsPage() {
     },
   });
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<PF>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(projectSchema),
   });
 
@@ -179,7 +179,7 @@ export default function ProjectsPage() {
             <DialogTitle>Create Project</DialogTitle>
             <DialogDescription>Add a new project to your workspace</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit((d) => createMut.mutate(d))} className="space-y-4">
+          <form onSubmit={handleSubmit((d) => createMut.mutate(d as unknown as PF))} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="proj-name">Name</Label>
               <Input {...register('name')} id="proj-name" placeholder="My Project" />

@@ -17,6 +17,7 @@ import NotificationsPage from '@/pages/NotificationsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ProjectDetailPage from '@/pages/ProjectDetailPage';
 import TaskDetailPage from '@/pages/TaskDetailPage';
+import PermissionsPage from '@/pages/PermissionsPage';
 import { Loader2 } from 'lucide-react';
 
 const queryClient = new QueryClient({
@@ -62,6 +63,7 @@ function AppRoutes() {
           <Route path="tasks/:id" element={<TaskDetailPage />} />
           <Route path="team" element={<TeamPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="permissions" element={<PermissionsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<div className="py-12 text-center text-muted-foreground">Settings page — coming soon</div>} />
         </Route>
