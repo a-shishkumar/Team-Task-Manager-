@@ -18,6 +18,9 @@ export const userApi = {
   getById: (id: string) => api.get<ApiResponse<{ user: User }>>(`/users/${id}`),
   getDashboard: () => api.get<ApiResponse<DashboardStats>>('/users/dashboard'),
   updateProfile: (data: Partial<User>) => api.put<ApiResponse<{ user: User }>>('/users/profile', data),
+  uploadAvatar: (formData: FormData) => api.put<ApiResponse<{ user: User }>>('/users/profile/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
   changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => api.put('/users/change-password', data),
   updateRole: (id: string, role: string) => api.put(`/users/${id}/role`, { role }),
   create: (data: Partial<User> & { password?: string }) => api.post<ApiResponse<{ user: User }>>('/users', data),
@@ -51,6 +54,11 @@ export const taskApi = {
   addSubtask: (taskId: string, title: string) => api.post<ApiResponse<{ task: Task }>>(`/tasks/${taskId}/subtasks`, { title }),
   toggleSubtask: (taskId: string, subtaskId: string) => api.put<ApiResponse<{ task: Task }>>(`/tasks/${taskId}/subtasks/${subtaskId}/toggle`),
   deleteSubtask: (taskId: string, subtaskId: string) => api.delete(`/tasks/${taskId}/subtasks/${subtaskId}`),
+  // Attachments
+  addAttachment: (taskId: string, formData: FormData) => api.post<ApiResponse<{ task: Task }>>(`/tasks/${taskId}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteAttachment: (taskId: string, attachmentId: string) => api.delete<ApiResponse<{ task: Task }>>(`/tasks/${taskId}/attachments/${attachmentId}`),
 };
 
 // ━━━ Comment API ━━━

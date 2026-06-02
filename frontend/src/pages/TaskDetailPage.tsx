@@ -3,10 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Edit, Trash2, Calendar, Clock, CheckCircle2, Circle, Plus, MessageSquare, Loader2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { taskApi, commentApi } from '@/api/endpoints';
+import { taskApi, commentApi, userApi } from '@/api/endpoints';
 import { cn, formatDate, timeAgo, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import type { Task, Comment } from '@/types';
+import type { Task, Comment, User } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,8 +34,10 @@ export default function TaskDetailPage() {
 
   const { data: task, isLoading } = useQuery({ queryKey: ['task', id], queryFn: async () => { const r = await taskApi.getById(id!); return (r.data.data as any)?.task; }, enabled: !!id });
   const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: async () => { const r = await commentApi.getByTask(id!); return r.data.data as Comment[]; }, enabled: !!id && tab === 'discussion' });
+  const { data: usersResponse } = useQuery({ queryKey: ['users-list'], queryFn: async () => { const r = await userApi.getAll({ limit: '100' }); return r.data.data || (r.data as unknown as User[]); } });
+  const teamUsers: User[] = Array.isArray(usersResponse) ? usersResponse : (usersResponse as any)?.users || [];
 
-  const editForm = useForm<{ title: string; description: string; status: string; priority: string; dueDate: string }>();
+  const editForm = useForm<{ title: string; description: string; status: string; priority: string; dueDate: string; assignee: string }>();
 
   const updateMut = useMutation({ mutationFn: (data: Partial<Task>) => taskApi.update(id!, data), onSuccess: () => { qc.invalidateQueries({ queryKey: ['task', id] }); qc.invalidateQueries({ queryKey: ['tasks'] }); setEditOpen(false); toast.success('Task updated'); } });
   const deleteMut = useMutation({ mutationFn: () => taskApi.delete(id!), onSuccess: () => { toast.success('Task deleted'); navigate('/tasks'); } });
@@ -88,7 +90,19 @@ export default function TaskDetailPage() {
             <Card><CardContent className="pt-0"><p className="text-xs text-muted-foreground">Status</p><Badge className="mt-1" variant="outline">{STATUS_LABELS[task.status]}</Badge></CardContent></Card>
             <Card><CardContent className="pt-0"><p className="text-xs text-muted-foreground">Priority</p><Badge className="mt-1" variant={PRIORITY_VARIANT[task.priority]}>{task.priority}</Badge></CardContent></Card>
             <Card><CardContent className="pt-0"><p className="text-xs text-muted-foreground">Due Date</p><p className={cn('mt-1 text-sm font-medium', task.isOverdue && 'text-destructive-foreground')}>{task.dueDate ? formatDate(task.dueDate) : '—'}</p></CardContent></Card>
-            <Card><CardContent className="pt-0"><p className="text-xs text-muted-foreground">Assignee</p><div className="mt-1 flex items-center gap-2">{task.assignee ? <><Avatar className="size-6"><AvatarFallback className="text-[10px]">{getInitials(task.assignee.name)}</AvatarFallback></Avatar><span className="text-sm">{task.assignee.name}</span></> : <span className="text-sm text-muted-foreground">Unassigned</span>}</div></CardContent></Card>
+            <Card><CardContent className="pt-0"><p className="text-xs text-muted-foreground">Assignee</p>
+              <Select value={task.assignee?._id || 'unassigned'} onValueChange={(v) => { const val = v === 'unassigned' ? null : v; updateMut.mutate({ assignee: val } as any); }}>
+                <SelectTrigger className="mt-1 h-8 w-full border-dashed">
+                  <div className="flex items-center gap-2">
+                    {task.assignee ? <><Avatar className="size-5"><AvatarFallback className="text-[9px]">{getInitials(task.assignee.name)}</AvatarFallback></Avatar><span className="text-xs">{task.assignee.name}</span></> : <span className="text-xs text-muted-foreground">Unassigned</span>}
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {teamUsers.map((u) => (<SelectItem key={u._id} value={u._id}>{u.name} — {u.role}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </CardContent></Card>
           </div>
 
           {/* Description */}
@@ -178,6 +192,16 @@ export default function TaskDetailPage() {
               <div className="space-y-2"><Label>Priority</Label><Select defaultValue={task.priority} onValueChange={v => editForm.setValue('priority', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select></div>
             </div>
             <div className="space-y-2"><Label>Due Date</Label><Input {...editForm.register('dueDate')} type="date" /></div>
+            <div className="space-y-2">
+              <Label>Assign To</Label>
+              <Select defaultValue={task.assignee?._id || ''} onValueChange={(v) => editForm.setValue('assignee', v)}>
+                <SelectTrigger><SelectValue placeholder="Select team member" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {teamUsers.map((u) => (<SelectItem key={u._id} value={u._id}>{u.name} — {u.role}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button><Button type="submit" disabled={updateMut.isPending}>Save</Button></DialogFooter>
           </form>
         </DialogContent>

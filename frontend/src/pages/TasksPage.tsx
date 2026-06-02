@@ -5,10 +5,12 @@ import { Plus, Search, Calendar, Loader2, ListTodo } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { taskApi, projectApi } from '@/api/endpoints';
+import { useSelector } from 'react-redux';
+import { taskApi, projectApi, userApi } from '@/api/endpoints';
 import { cn, formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import type { Task, Project } from '@/types';
+import type { Task, Project, User } from '@/types';
+import type { RootState } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +32,7 @@ const taskSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   status: z.enum(['todo', 'in-progress', 'review', 'completed']).default('todo'),
   dueDate: z.string().optional(),
+  assignee: z.string().optional(),
 });
 type TF = z.infer<typeof taskSchema>;
 
@@ -56,6 +59,17 @@ export default function TasksPage() {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
+
+  const { user: currentUser } = useSelector((s: RootState) => s.auth);
+
+  const { data: usersResponse } = useQuery({
+    queryKey: ['users-list'],
+    queryFn: async () => {
+      const r = await userApi.getAll({ limit: '100' });
+      return r.data.data || (r.data as unknown as User[]);
+    },
+  });
+  const users = Array.isArray(usersResponse) ? usersResponse : (usersResponse as any)?.users || [];
 
   const { data, isLoading } = useQuery({
     queryKey: ['tasks', search, statusFilter, page],
@@ -93,8 +107,8 @@ export default function TasksPage() {
     },
   });
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
-    resolver: zodResolver(taskSchema),
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
+    resolver: zodResolver(taskSchema) as any,
   });
 
   return (
@@ -107,7 +121,14 @@ export default function TasksPage() {
         </div>
         <Button
           onClick={() => {
-            reset({ title: '', description: '', project: '', priority: 'medium', status: 'todo' });
+            reset({
+              title: '',
+              description: '',
+              project: '',
+              priority: 'medium',
+              status: 'todo',
+              assignee: currentUser?._id || '',
+            });
             setShowModal(true);
           }}
         >
@@ -227,7 +248,7 @@ export default function TasksPage() {
             <div className="space-y-2">
               <Label htmlFor="task-title">Title</Label>
               <Input {...register('title')} id="task-title" placeholder="Task title..." />
-              {errors.title && <p className="text-xs text-destructive-foreground">{errors.title.message}</p>}
+              {errors.title && <p className="text-xs text-destructive-foreground">{errors.title.message as string}</p>}
             </div>
 
             <div className="space-y-2">
@@ -248,7 +269,7 @@ export default function TasksPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.project && <p className="text-xs text-destructive-foreground">{errors.project.message}</p>}
+                {errors.project && <p className="text-xs text-destructive-foreground">{errors.project.message as string}</p>}
               </div>
 
               <div className="space-y-2">
@@ -286,6 +307,22 @@ export default function TasksPage() {
                 <Label htmlFor="task-dueDate">Due Date</Label>
                 <Input {...register('dueDate')} id="task-dueDate" type="date" />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Assign To</Label>
+              <Select defaultValue={currentUser?._id || ''} onValueChange={(v) => setValue('assignee', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select team member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u: User) => (
+                    <SelectItem key={u._id} value={u._id}>
+                      {u.name} {u._id === currentUser?._id ? '(Me)' : ''} — {u.role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <DialogFooter>

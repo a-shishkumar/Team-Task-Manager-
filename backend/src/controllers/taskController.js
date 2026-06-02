@@ -1,6 +1,7 @@
 const taskService = require('../services/taskService');
 const catchAsync = require('../utils/catchAsync');
 const ApiResponse = require('../utils/ApiResponse');
+const { uploadBuffer, deleteFile } = require('../config/cloudinary');
 
 exports.create = catchAsync(async (req, res) => {
   const task = await taskService.create(req.body, req.user._id);
@@ -60,4 +61,51 @@ exports.deleteSubtask = catchAsync(async (req, res) => {
   task.subtasks.pull(req.params.subtaskId);
   await task.save();
   ApiResponse.success(res, { task }, 'Subtask removed');
+});
+
+// ━━━ Attachment Operations ━━━
+exports.addAttachment = catchAsync(async (req, res) => {
+  if (!req.file) {
+    throw new Error('Please upload a file');
+  }
+
+  const task = await taskService.getById(req.params.id, req.user._id);
+  
+  // Upload buffer to Cloudinary
+  const result = await uploadBuffer(req.file.buffer, {
+    folder: 'team-task-manager/attachments',
+    resource_type: 'auto'
+  });
+
+  const attachment = {
+    name: req.file.originalname,
+    url: result.secure_url,
+    publicId: result.public_id,
+    type: req.file.mimetype,
+    size: req.file.size,
+    uploadedBy: req.user._id,
+  };
+
+  task.attachments.push(attachment);
+  await task.save();
+
+  ApiResponse.created(res, { task }, 'Attachment uploaded successfully');
+});
+
+exports.deleteAttachment = catchAsync(async (req, res) => {
+  const task = await taskService.getById(req.params.id, req.user._id);
+  const attachment = task.attachments.id(req.params.attachmentId);
+  if (!attachment) {
+    throw new Error('Attachment not found');
+  }
+
+  // Delete from Cloudinary
+  if (attachment.publicId) {
+    await deleteFile(attachment.publicId).catch(() => {});
+  }
+
+  task.attachments.pull(req.params.attachmentId);
+  await task.save();
+
+  ApiResponse.success(res, { task }, 'Attachment deleted successfully');
 });

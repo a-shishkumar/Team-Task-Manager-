@@ -5,12 +5,14 @@ const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { updateProfile, changePassword } = require('../validators/authValidator');
 const { cache } = require('../middleware/cache');
+const { uploadAvatar } = require('../middleware/upload');
 
 router.use(protect);
 router.get('/', cache(120), userController.getUsers);
 router.get('/dashboard', cache(60), userController.getDashboardStats);
 router.get('/:id', cache(120), userController.getUserById);
 router.put('/profile', validate(updateProfile), userController.updateProfile);
+router.put('/profile/avatar', uploadAvatar, userController.updateAvatar);
 router.put('/change-password', validate(changePassword), userController.changePassword);
 router.post('/', authorize('admin'), userController.createUser);
 router.put('/:id', authorize('admin'), userController.updateUser);

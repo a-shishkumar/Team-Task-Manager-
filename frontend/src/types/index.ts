@@ -67,8 +67,20 @@ export interface Task {
   estimatedHours: number;
   actualHours: number;
   isOverdue: boolean;
+  attachments?: Attachment[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Attachment {
+  _id: string;
+  name: string;
+  url: string;
+  publicId: string;
+  type: string;
+  size: number;
+  uploadedBy: User;
+  uploadedAt: string;
 }
 
 export interface Comment {

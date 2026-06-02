@@ -16,13 +16,20 @@ class TaskService {
 
     const lastTask = await Task.findOne({ project: taskData.project, status: taskData.status || 'todo' }).sort({ order: -1 });
 
-    const task = await Task.create({ ...taskData, reporter: userId, order: lastTask ? lastTask.order + 1 : 0 });
+    const assignee = taskData.assignee || userId;
+    const task = await Task.create({
+      ...taskData,
+      assignee: assignee || undefined,
+      reporter: userId,
+      order: lastTask ? lastTask.order + 1 : 0
+    });
 
-    if (taskData.assignee && taskData.assignee !== userId.toString()) {
-      await Notification.create({ recipient: taskData.assignee, sender: userId, type: 'task_assigned', title: 'New Task Assigned', message: `You have been assigned "${task.title}" in "${project.name}"`, link: `/projects/${project._id}/tasks/${task._id}`, relatedProject: project._id, relatedTask: task._id });
+    const activeAssignee = task.assignee ? task.assignee.toString() : null;
+    if (activeAssignee && activeAssignee !== userId.toString()) {
+      await Notification.create({ recipient: activeAssignee, sender: userId, type: 'task_assigned', title: 'New Task Assigned', message: `You have been assigned "${task.title}" in "${project.name}"`, link: `/projects/${project._id}/tasks/${task._id}`, relatedProject: project._id, relatedTask: task._id });
       
       // Asynchronously send email notification
-      User.findById(taskData.assignee).then(async (assigneeUser) => {
+      User.findById(activeAssignee).then(async (assigneeUser) => {
         const reporterUser = await User.findById(userId);
         if (assigneeUser && assigneeUser.email) {
           await emailService.sendTaskAssignmentEmail(

@@ -5,6 +5,35 @@ const ActivityLog = require('../models/ActivityLog');
 const catchAsync = require('../utils/catchAsync');
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
+const { uploadBuffer, deleteFile } = require('../config/cloudinary');
+
+exports.updateAvatar = catchAsync(async (req, res) => {
+  if (!req.file) {
+    throw ApiError.badRequest('Please upload an image file');
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw ApiError.notFound('User not found');
+
+  // If user already has an avatar in Cloudinary, delete it first
+  if (user.avatar && user.avatar.publicId) {
+    await deleteFile(user.avatar.publicId).catch(() => {});
+  }
+
+  // Upload new avatar buffer
+  const result = await uploadBuffer(req.file.buffer, {
+    folder: 'team-task-manager/avatars',
+    transformation: [{ width: 250, height: 250, crop: 'thumb', gravity: 'face' }]
+  });
+
+  user.avatar = {
+    url: result.secure_url,
+    publicId: result.public_id
+  };
+  await user.save();
+
+  ApiResponse.success(res, { user }, 'Avatar updated successfully');
+});
 
 exports.getUsers = catchAsync(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
