@@ -9,4 +9,4 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-CMD ["sh", "-c", "sed -i 's|BACKEND_URL_PLACEHOLDER|'\"${BACKEND_URL:-http://backend:5000}\"'|g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "sed -i 's|PORT_PLACEHOLDER|'\"${PORT:-80}\"'|g' /etc/nginx/conf.d/default.conf && sed -i 's|BACKEND_URL_PLACEHOLDER|'\"${BACKEND_URL:-http://backend:5000}\"'|g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
