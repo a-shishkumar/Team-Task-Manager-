@@ -35,11 +35,9 @@ class AuthService {
     await user.save({ validateBeforeSave: false });
 
     // Send verification email (non-blocking)
-    try {
-      await emailService.sendVerificationEmail(user.email, user.name, token);
-    } catch (err) {
+    emailService.sendVerificationEmail(user.email, user.name, token).catch((err) => {
       // Don't fail registration if email fails
-    }
+    });
 
     // Generate tokens
     const accessToken = generateAccessToken(user._id);

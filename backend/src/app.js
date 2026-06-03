@@ -41,7 +41,12 @@ app.set('io', io);
 
 // ━━━ Security Middleware ━━━
 app.use(helmet());
-app.use(cors({ origin: config.clientUrl, credentials: true }));
+const corsOrigin = config.clientUrl === '*'
+  ? '*'
+  : config.clientUrl.includes(',')
+    ? config.clientUrl.split(',').map(s => s.trim())
+    : config.clientUrl;
+app.use(cors({ origin: corsOrigin, credentials: corsOrigin !== '*' }));
 app.use(mongoSanitize());
 
 // ━━━ Rate Limiting ━━━
