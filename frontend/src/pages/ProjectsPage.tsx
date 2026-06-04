@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Users, Calendar, FolderKanban } from 'lucide-react';
@@ -41,23 +41,50 @@ const PRIORITY_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' |
 
 export default function ProjectsPage() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const qc = useQueryClient();
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['projects', search, page],
+    queryKey: ['projects', debouncedSearch, page],
     queryFn: async () => {
-      const r = await projectApi.getAll({ search, page: String(page), limit: '9' });
+      const params: Record<string, string> = { page: String(page), limit: '9' };
+      if (debouncedSearch) params.search = debouncedSearch;
+      const r = await projectApi.getAll(params);
       return { projects: r.data.data as Project[], pagination: r.data.pagination };
     },
   });
 
   const createMut = useMutation({
-    mutationFn: (d: PF) => projectApi.create(d),
+    mutationFn: (d: PF) => {
+      // Convert deadline to ISO if present
+      const payload = { ...d };
+      if (payload.deadline) {
+        payload.deadline = new Date(payload.deadline).toISOString();
+      }
+      return projectApi.create(payload);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects'] });
       setShowModal(false);
-      toast.success('Project created!');
+      reset();
+      toast.success('🎉 Project created successfully!');
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || 'Failed to create project';
+      toast.error(msg);
     },
   });
 
@@ -208,7 +235,10 @@ export default function ProjectsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="proj-deadline">Deadline</Label>
-                <Input {...register('deadline')} id="proj-deadline" type="date" />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input {...register('deadline')} id="proj-deadline" type="date" min={todayStr} className="pl-9" />
+                </div>
               </div>
             </div>
 

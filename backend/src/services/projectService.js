@@ -44,6 +44,15 @@ class ProjectService {
     if (query.status) filter.status = query.status;
     if (query.priority) filter.priority = query.priority;
 
+    // Apply search filter using $and to avoid $or conflict
+    if (query.search || query.q) {
+      const searchTerm = query.search || query.q;
+      const searchRegex = new RegExp(searchTerm, 'i');
+      filter.$and = [
+        { $or: [{ name: searchRegex }, { description: searchRegex }] },
+      ];
+    }
+
     const builder = new QueryBuilder(
       Project.find(filter)
         .populate('owner', 'name email avatar')
@@ -51,7 +60,7 @@ class ProjectService {
       query
     );
 
-    builder.search(['name', 'description']).sort().selectFields().paginate();
+    builder.sort().selectFields().paginate();
 
     const projects = await builder.query;
     const pagination = await builder.getPaginationInfo(Project, filter);

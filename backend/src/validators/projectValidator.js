@@ -6,7 +6,7 @@ const createProject = Joi.object({
   status: Joi.string().valid('planning', 'active', 'on-hold', 'completed', 'archived').default('planning'),
   priority: Joi.string().valid('low', 'medium', 'high', 'critical').default('medium'),
   startDate: Joi.date().iso(),
-  deadline: Joi.date().iso().greater(Joi.ref('startDate')),
+  deadline: Joi.date().iso(),
   tags: Joi.array().items(Joi.string().max(30)).max(10),
   color: Joi.string().pattern(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
   members: Joi.array().items(
