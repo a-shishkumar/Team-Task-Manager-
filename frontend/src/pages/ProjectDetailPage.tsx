@@ -6,7 +6,7 @@ import { ArrowLeft, Edit, Trash2, UserPlus, Users, Calendar, ListTodo, Plus, Loa
 import { useForm } from 'react-hook-form';
 import { projectApi, taskApi, userApi } from '@/api/endpoints';
 import { cn, formatDate, getInitials } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { RootState } from '@/store';
 import type { Project, Task, User } from '@/types';
 import { Button } from '@/components/ui/button';

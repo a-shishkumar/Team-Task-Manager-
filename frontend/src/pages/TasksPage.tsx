@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Calendar, Loader2, ListTodo } from 'lucide-react';
@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { taskApi, projectApi, userApi } from '@/api/endpoints';
 import { cn, formatDate } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { Task, Project, User } from '@/types';
 import type { RootState } from '@/store';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export default function TasksPage() {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const { user: currentUser } = useSelector((s: RootState) => s.auth);
 
@@ -91,11 +92,22 @@ export default function TasksPage() {
   });
 
   const createMut = useMutation({
-    mutationFn: (d: TF) => taskApi.create(d as any),
+    mutationFn: (d: TF) => {
+      const payload = { ...d } as any;
+      if (payload.dueDate) {
+        payload.dueDate = new Date(payload.dueDate).toISOString();
+      }
+      return taskApi.create(payload);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       setShowModal(false);
-      toast.success('Task created!');
+      reset();
+      toast.success('🎉 Task created successfully!');
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || 'Failed to create task';
+      toast.error(msg);
     },
   });
 
@@ -305,7 +317,10 @@ export default function TasksPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="task-dueDate">Due Date</Label>
-                <Input {...register('dueDate')} id="task-dueDate" type="date" />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input {...register('dueDate')} id="task-dueDate" type="date" min={todayStr} className="pl-9" />
+                </div>
               </div>
             </div>
 

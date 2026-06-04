@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from 'sonner';
 import { useEffect, type ReactNode } from 'react';
 import { store, type RootState, type AppDispatch } from '@/store';
 import { getMe } from '@/store/authSlice';
@@ -80,18 +80,7 @@ export default function App() {
         <ThemeProvider>
           <BrowserRouter>
             <AppRoutes />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                className: 'text-sm',
-                style: {
-                  borderRadius: 'var(--radius)',
-                  background: 'var(--card)',
-                  color: 'var(--foreground)',
-                  border: '1px solid var(--border)',
-                },
-              }}
-            />
+            <Toaster position="top-right" richColors closeButton theme="system" />
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>

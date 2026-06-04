@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 interface PermissionRow {

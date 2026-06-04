@@ -32,10 +32,14 @@ class ProjectService {
    * Get all projects for a user (owned + member of)
    */
   async getAll(query, userId) {
+    // Find projects where user has assigned tasks
+    const assignedTaskProjects = await Task.distinct('project', { assignee: userId });
+
     const filter = {
       $or: [
         { owner: userId },
         { 'members.user': userId },
+        { _id: { $in: assignedTaskProjects } },
       ],
       isArchived: query.archived === 'true' ? true : false,
     };

@@ -8,7 +8,7 @@ import { User, Mail, Phone, Building, Briefcase, Lock, Loader2, Save, ShieldChec
 import { userApi } from '@/api/endpoints';
 import { getMe } from '@/store/authSlice';
 import { cn, getInitials, formatDate } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { RootState, AppDispatch } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

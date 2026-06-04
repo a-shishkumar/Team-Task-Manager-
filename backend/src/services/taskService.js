@@ -60,7 +60,12 @@ class TaskService {
       filter.project = query.project;
     } else {
       const projects = await Project.find({ $or: [{ owner: userId }, { 'members.user': userId }] }).select('_id');
-      filter.project = { $in: projects.map((p) => p._id) };
+      const projectIds = projects.map((p) => p._id);
+      // Show tasks from user's projects OR tasks assigned to user (even in other projects)
+      filter.$or = [
+        { project: { $in: projectIds } },
+        { assignee: userId },
+      ];
     }
     if (query.status) filter.status = query.status;
     if (query.priority) filter.priority = query.priority;

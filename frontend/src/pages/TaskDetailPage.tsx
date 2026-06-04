@@ -5,7 +5,7 @@ import { ArrowLeft, Edit, Trash2, Calendar, Clock, CheckCircle2, Circle, Plus, M
 import { useForm } from 'react-hook-form';
 import { taskApi, commentApi, userApi } from '@/api/endpoints';
 import { cn, formatDate, timeAgo, getInitials } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { Task, Comment, User } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
