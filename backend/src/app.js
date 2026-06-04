@@ -28,6 +28,8 @@ const permissionRoutes = require('./routes/permissionRoutes');
 
 // Initialize Express
 const app = express();
+// Trust first proxy (Railway runs behind a reverse proxy)
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // Socket.IO setup
